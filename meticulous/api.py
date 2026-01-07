@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import IO, Any, Callable, Dict, List, Optional, Self, Union, get_args
+from datetime import datetime
 
 import requests
 import socketio
@@ -14,6 +15,7 @@ from .api_types import (
     ButtonEvent,
     ChangeProfileResponse,
     Communication,
+    HistoryFile,
     LastProfile,
     MachineInfo,
     Notification,
@@ -308,5 +310,21 @@ class Api:
         response = self.session.post(f"{self.base_url}/api/v1/sounds/theme/set/{theme}")
         if response.status_code == 200:
             return None
+        else:
+            return TypeAdapter(APIError).validate_python(response.json())
+
+    def get_history_dates(self) -> Union[List[HistoryFile], APIError]:
+        """Get list of dates available in history."""
+        response = self.session.get(f"{self.base_url}/api/v1/history/files/")
+        if response.status_code == 200:
+            return TypeAdapter(List[HistoryFile]).validate_python(response.json())
+        else:
+            return TypeAdapter(APIError).validate_python(response.json())
+
+    def get_shot_files(self, date_str: str) -> Union[List[HistoryFile], APIError]:
+        """Get list of shot files for a specific date (YYYY-MM-DD)."""
+        response = self.session.get(f"{self.base_url}/api/v1/history/files/{date_str}")
+        if response.status_code == 200:
+            return TypeAdapter(List[HistoryFile]).validate_python(response.json())
         else:
             return TypeAdapter(APIError).validate_python(response.json())
